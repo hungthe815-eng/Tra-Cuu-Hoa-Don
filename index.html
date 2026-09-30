@@ -3,196 +3,253 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hệ Thống Tra Cứu Hóa Đơn Điện Tử</title>
-    <!-- Thư viện giải nén ZIP trực tiếp trên trình duyệt -->
+    <title>Hệ Thống Tra Cứu Hóa Đơn Tự Động - OneDrive</title>
+    <!-- Thư viện giải nén ZIP & đọc XML -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
         * { box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; background: #f0f2f5; margin: 0; padding: 20px; color: #333; }
-        .container { max-width: 1000px; margin: 0 auto; }
-        .card { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 20px; }
-        h2 { margin-top: 0; color: #1890ff; font-size: 20px; }
-        .status-box { background: #e6f7ff; border: 1px solid #91d5ff; padding: 12px 15px; border-radius: 6px; font-weight: bold; color: #096dd9; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
-        .btn-refresh { background: #1890ff; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        .btn-refresh:hover { background: #40a9ff; }
-        .search-input { width: 100%; padding: 10px 15px; border: 1px solid #d9d9d9; border-radius: 4px; font-size: 15px; margin-bottom: 15px; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { border: 1px solid #e8e8e8; padding: 10px; text-align: left; font-size: 14px; }
-        th { background: #fafafa; font-weight: 600; }
-        tr:hover { background: #f5f5f5; }
-        .btn-view { background: #52c41a; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        .btn-view:hover { background: #73d13d; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; 
+            background-color: #f4f6f9; 
+            margin: 0; 
+            padding: 20px; 
+            color: #333; 
+        }
+        .container { max-width: 1100px; margin: 0 auto; }
+        .card { 
+            background: #fff; 
+            padding: 24px; 
+            border-radius: 10px; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05); 
+            margin-bottom: 20px; 
+        }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #e8e8e8; padding-bottom: 15px; }
+        h2 { margin: 0; color: #0050b3; font-size: 22px; }
+        
+        .config-box { 
+            background: #e6f7ff; 
+            border: 1px solid #91d5ff; 
+            padding: 15px; 
+            border-radius: 8px; 
+            margin-bottom: 20px; 
+        }
+        .input-group { display: flex; gap: 10px; margin-top: 8px; }
+        .input-group input { 
+            flex: 1; 
+            padding: 10px 14px; 
+            border: 1px solid #b7eb8f; 
+            border-radius: 6px; 
+            font-size: 14px; 
+            background-color: #fff;
+        }
+        
+        .btn { 
+            background: #1890ff; 
+            color: white; 
+            border: none; 
+            padding: 10px 20px; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            font-weight: 600; 
+            transition: all 0.2s;
+        }
+        .btn:hover { background: #40a9ff; }
+        .btn-sync { background: #52c41a; }
+        .btn-sync:hover { background: #73d13d; }
+        
+        .status-box { 
+            padding: 12px 16px; 
+            border-radius: 6px; 
+            font-weight: 500; 
+            margin-bottom: 20px; 
+            font-size: 14px;
+        }
+        .status-loading { background: #fffbe6; border: 1px solid #ffe58f; color: #d48806; }
+        .status-success { background: #f6ffed; border: 1px solid #b7eb8f; color: #389e0d; }
+        .status-error { background: #fff2f0; border: 1px solid #ffccc7; color: #cf1322; }
+
+        .search-box { margin-bottom: 20px; }
+        .search-input { 
+            width: 100%; 
+            padding: 12px 16px; 
+            border: 1px solid #d9d9d9; 
+            border-radius: 6px; 
+            font-size: 15px; 
+            outline: none;
+        }
+        .search-input:focus { border-color: #40a9ff; box-shadow: 0 0 0 2px rgba(24,144,255,0.2); }
+
+        table { width: 100%; border-collapse: collapse; background: #fff; }
+        th, td { border: 1px solid #f0f0f0; padding: 12px 15px; text-align: left; font-size: 14px; }
+        th { background: #fafafa; color: #595959; font-weight: 600; }
+        tr:hover { background: #fafafa; }
+        
+        .btn-view { background: #1890ff; color: white; border: none; padding: 5px 12px; border-radius: 4px; cursor: pointer; font-size: 13px; }
         .text-center { text-align: center; }
         .text-right { text-align: right; }
         
-        /* Modal Popup */
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; overflow-y: auto; }
-        .modal-content { background: #fff; width: 90%; max-width: 800px; margin: 30px auto; padding: 25px; border-radius: 8px; position: relative; }
-        .close-btn { position: absolute; top: 10px; right: 15px; font-size: 24px; cursor: pointer; color: #999; }
-        .inv-header { text-align: center; border-bottom: 2px solid #1890ff; padding-bottom: 10px; }
-        .inv-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 15px 0; }
-        .inv-box { background: #fafafa; padding: 10px; border-radius: 4px; border: 1px solid #eee; }
-        .total-price { font-size: 16px; font-weight: bold; color: #f5222d; text-align: right; margin-top: 15px; }
+        /* Modal Popup Xem Hóa Đơn */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.45); z-index: 1000; overflow-y: auto; }
+        .modal-content { background: #fff; width: 90%; max-width: 750px; margin: 40px auto; padding: 25px; border-radius: 8px; position: relative; box-shadow: 0 4px 20px rgba(0,0,0,0.15); }
+        .close-btn { position: absolute; top: 15px; right: 20px; font-size: 24px; cursor: pointer; color: #8c8c8c; }
+        .close-btn:hover { color: #262626; }
+        
+        .invoice-detail-table { width: 100%; margin-top: 15px; }
+        .invoice-detail-table td { padding: 8px; border: none; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="card">
-        <h2>Tra Cứu Hóa Đơn Điện Tử (Đồng bộ kho OneDrive)</h2>
+        <div class="header">
+            <h2>☁️ Hệ Thống Tra Cứu Hóa Đơn OneDrive</h2>
+            <button class="btn btn-sync" onclick="syncFromOneDrive()">🔄 Cập Nhật Dữ Liệu</button>
+        </div>
         
-        <div class="status-box">
-            <span id="syncStatus">🔄 Đang kết nối kho OneDrive...</span>
-            <button class="btn-refresh" onclick="fetchFromOneDrive()">🔄 Tải lại dữ liệu</button>
+        <!-- Cấu hình Link OneDrive cố định -->
+        <div class="config-box">
+            <label><b>🔗 Link Thư Mục OneDrive Đang Kết Nối:</b></label>
+            <div class="input-group">
+                <input type="text" id="oneDriveLink" value="https://galaxystudiovn-my.sharepoint.com/:f:/g/personal/hungdt_galaxystudiovn_vn/IgCekKJeBBKZQI3UItxbOKSvAacUdRW4gj9IhY8IB1k8rUY?e=BWokD4">
+                <button class="btn" onclick="syncFromOneDrive()">Đồng Bộ Lại</button>
+            </div>
         </div>
 
-        <input type="text" id="searchInput" class="search-input" placeholder="Nhập Mã Số Thuế NCC, Tên Nhà Cung Cấp hoặc Số Hóa Đơn để tìm kiếm..." oninput="filterTable()">
+        <!-- Trạng thái kết nối -->
+        <div id="statusBox" class="status-box status-loading">
+            ⏳ Đang kết nối tới OneDrive và tự động tải dữ liệu hóa đơn...
+        </div>
 
+        <!-- Tìm kiếm -->
+        <div class="search-box">
+            <input type="text" id="searchInput" class="search-input" placeholder="🔍 Nhập Mã số thuế, Tên nhà cung cấp hoặc Số hóa đơn để tìm..." oninput="filterTable()">
+        </div>
+
+        <!-- Bảng danh sách Hóa Đơn -->
         <table>
             <thead>
                 <tr>
-                    <th style="width: 40px;">STT</th>
-                    <th style="width: 100px;">Ngày lập</th>
-                    <th>Ký hiệu - Số HĐ</th>
-                    <th>MST NCC</th>
-                    <th>Tên Nhà Cung Cấp</th>
-                    <th style="width: 120px;">Tổng tiền</th>
-                    <th style="width: 70px;">Thao tác</th>
+                    <th style="width: 50px;" class="text-center">STT</th>
+                    <th style="width: 110px;">Ngày Lập</th>
+                    <th style="width: 140px;">Số Hóa Đơn</th>
+                    <th style="width: 130px;">MST Bán</th>
+                    <th>Đơn Vị Bán (Nhà Cung Cấp)</th>
+                    <th style="width: 140px;" class="text-right">Tổng Tiền (VNĐ)</th>
+                    <th style="width: 80px;" class="text-center">Xem</th>
                 </tr>
             </thead>
             <tbody id="invoiceList">
-                <tr><td colspan="7" class="text-center" style="color: #999;">Đang kết nối kho dữ liệu...</td></tr>
+                <tr><td colspan="7" class="text-center" style="color:#999; padding: 30px;">Đang tải dữ liệu...</td></tr>
             </tbody>
         </table>
     </div>
 </div>
 
-<!-- POPUP XEM CHI TIẾT HÓA ĐƠN -->
+<!-- Modal Xem Chi Tiết -->
 <div id="viewModal" class="modal">
     <div class="modal-content">
         <span class="close-btn" onclick="closeModal()">&times;</span>
-        <div class="inv-header">
-            <h2 id="invTitle" style="color:#1890ff; margin:0;">HÓA ĐƠN GIÁ TRỊ GIA TĂNG</h2>
-            <div>Ký hiệu: <b id="invSeries"></b> | Số: <b id="invNumber" style="color:red;"></b> | Ngày: <b id="invDate"></b></div>
-        </div>
-
-        <div class="inv-grid">
-            <div class="inv-box">
-                <h4 style="margin:0 0 5px 0; color:#1890ff;">ĐƠN VỊ BÁN HÀNG (NCC)</h4>
-                <p><b>Tên:</b> <span id="sellerName"></span></p>
-                <p><b>MST:</b> <b id="sellerTax"></b></p>
-                <p><b>Địa chỉ:</b> <span id="sellerAddr"></span></p>
-            </div>
-            <div class="inv-box">
-                <h4 style="margin:0 0 5px 0; color:#1890ff;">BÊN MUA HÀNG</h4>
-                <p><b>Tên:</b> <span id="buyerName"></span></p>
-                <p><b>MST:</b> <span id="buyerTax"></span></p>
-            </div>
-        </div>
-
-        <table>
-            <thead>
-                <tr>
-                    <th style="width: 40px;">STT</th>
-                    <th>Tên hàng hóa, dịch vụ</th>
-                    <th style="width: 60px;">ĐVT</th>
-                    <th style="width: 70px;">SL</th>
-                    <th style="width: 90px;">Đơn giá</th>
-                    <th style="width: 100px;">Thành tiền</th>
-                </tr>
-            </thead>
-            <tbody id="itemsList"></tbody>
-        </table>
-
-        <div class="total-price">TỔNG TIỀN THANH TOÁN: <span id="totalAmount">0</span> VNĐ</div>
+        <h3 style="text-align:center; color:#1890ff; margin-top:0; border-bottom:1px solid #eee; padding-bottom:10px;">THÔNG TIN HÓA ĐƠN ĐIỆN TỬ</h3>
+        <div id="modalBody"></div>
     </div>
 </div>
 
 <script>
-    // ⚠️ HÃY DÁN LINK CHIA SẺ THƯ MỤC ONEDRIVE CỦA BẠN VÀO GIỮA DẤU NGOẶC KÉP BÊN ĐƯỚI:
-    const ONEDRIVE_SHARE_LINK = "DÁN_LINK_CHIA_SẺ_ONEDRIVE_VÀO_ĐÂY";
-
     let allInvoices = [];
 
-    // Mã hóa đường dẫn link chia sẻ OneDrive sang định dạng u!Base64 Token
-    function getShareToken(url) {
-        let base64Value = btoa(unescape(encodeURIComponent(url)));
-        return "u!" + base64Value.replace(/=/g, '').replace(/\//g, '_').replace(/\+/g, '-');
-    }
+    // Hàm đồng bộ tự động từ link OneDrive
+    async function syncFromOneDrive() {
+        const link = document.getElementById("oneDriveLink").value.trim();
+        const statusEl = document.getElementById("statusBox");
 
-    async function fetchFromOneDrive() {
-        const statusEl = document.getElementById("syncStatus");
-        statusEl.innerText = "⏳ Đang kết nối kho OneDrive...";
-        allInvoices = [];
+        if (!link) {
+            alert("Vui lòng không để trống Link OneDrive!");
+            return;
+        }
+
+        setStatus("loading", "⏳ Đang kết nối tới OneDrive và quét danh sách hóa đơn...");
 
         try {
-            if (!ONEDRIVE_SHARE_LINK || ONEDRIVE_SHARE_LINK.includes("C:\Users\hungdt\OneDrive - CONG TY CP PHIM THIEN NGAN\WED HOA DON\HOA DON")) {
-                statusEl.innerText = "⚠️ Chưa dán link OneDrive chia sẻ vào biến ONEDRIVE_SHARE_LINK trong code!";
+            // Sử dụng Proxy để đọc nội dung OneDrive vượt qua rào cản CORS
+            const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(link)}`;
+            
+            const response = await fetch(proxyUrl);
+            if (!response.ok) throw new Error("Không thể kết nối đến thư mục OneDrive.");
+
+            const htmlText = await response.text();
+            
+            // Tìm tất cả các file XML/ZIP có trong thư mục OneDrive
+            const xmlUrls = extractFileUrls(htmlText, link);
+
+            if (xmlUrls.length === 0) {
+                setStatus("error", "⚠️ Đã kết nối nhưng không quét thấy file XML/ZIP nào trong thư mục OneDrive này. LƯU Ý: Nếu đây là tài khoản doanh nghiệp nội bộ bảo mật cao, hãy kiểm tra quyền truy cập công khai.");
+                renderTable([]);
                 return;
             }
 
-            const shareToken = getShareToken(ONEDRIVE_SHARE_LINK);
-            const apiUrl = `https://api.onedrive.com/v1.0/shares/${shareToken}/root/children`;
-
-            // Sử dụng CORS Proxy miễn phí để không bị chặn kết nối API từ trình duyệt
-            const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(apiUrl)}`;
-
-            const response = await fetch(proxyUrl);
-            if (!response.ok) throw new Error("Không thể kết nối thư mục OneDrive. Hãy đảm bảo quyền chia sẻ là 'Anyone with the link' (Bất kỳ ai có liên kết).");
-
-            const data = await response.json();
-            const files = data.value || [];
-
+            allInvoices = [];
             let count = 0;
-            for (let i = 0; i < files.length; i++) {
-                const file = files[i];
-                statusEl.innerText = `⏳ Đang xử lý file (${i + 1}/${files.length}): ${file.name}`;
 
-                if (file.name.endsWith(".xml") || file.name.endsWith(".zip")) {
-                    const downloadUrl = file["@content.downloadUrl"];
-                    const fileProxy = `https://api.allorigins.win/raw?url=${encodeURIComponent(downloadUrl)}`;
-                    
-                    if (file.name.endsWith(".xml")) {
-                        const xmlText = await (await fetch(fileProxy)).text();
-                        if (parseAndAddXml(xmlText)) count++;
-                    } else if (file.name.endsWith(".zip")) {
-                        try {
-                            const zipBlob = await (await fetch(fileProxy)).blob();
-                            const zip = await JSZip.loadAsync(zipBlob);
-                            for (const relPath in zip.files) {
-                                if (relPath.endsWith(".xml")) {
-                                    const xmlText = await zip.files[relPath].async("text");
-                                    if (parseAndAddXml(xmlText)) count++;
-                                }
-                            }
-                        } catch(e) { console.error("Lỗi đọc file zip:", e); }
-                    }
-                }
+            for (let i = 0; i < xmlUrls.length; i++) {
+                setStatus("loading", `⏳ Đang đọc nội dung hóa đơn (${i + 1}/${xmlUrls.length})...`);
+                const fileUrl = xmlUrls[i];
+                
+                try {
+                    const fileRes = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(fileUrl)}`);
+                    const xmlContent = await fileRes.text();
+                    if (parseAndAddXml(xmlContent)) count++;
+                } catch(e) {}
             }
 
-            statusEl.innerText = `✅ Đã đồng bộ thành công ${count} hóa đơn từ OneDrive!`;
+            if (count > 0) {
+                setStatus("success", `✅ Đã đồng bộ thành công ${count} hóa đơn từ OneDrive!`);
+            } else {
+                setStatus("error", "❌ Đã tìm thấy file nhưng không phân tích được cấu trúc XML hóa đơn.");
+            }
+            
             renderTable(allInvoices);
+
         } catch (err) {
-            statusEl.innerText = "❌ Lỗi: " + err.message;
+            console.error(err);
+            setStatus("error", "❌ Lỗi kết nối OneDrive: Hãy đảm bảo thư mục đã được bật quyền 'Anyone with the link' (Bất kỳ ai có liên kết).");
         }
     }
 
+    // Tách các liên kết file XML/ZIP từ HTML trả về
+    function extractFileUrls(htmlText, baseUrl) {
+        const urls = [];
+        const regex = /href=["']([^"']+\.(?:xml|zip)[^"']*)["']/gi;
+        let match;
+        while ((match = regex.exec(htmlText)) !== null) {
+            let fileUrl = match[1];
+            if (!fileUrl.startsWith("http")) {
+                fileUrl = new URL(fileUrl, baseUrl).href;
+            }
+            urls.push(fileUrl);
+        }
+        return [...new Set(urls)]; // Bỏ bớt đường dẫn trùng lặp
+    }
+
+    // Đọc file XML hóa đơn
     function parseAndAddXml(xmlText) {
         try {
             const xml = new DOMParser().parseFromString(xmlText, "text/xml");
             const getTxt = (tag) => { const el = xml.querySelector(tag); return el ? el.textContent.trim() : ""; };
             
-            const sellerTax = getTxt("NBan > MST");
+            const sellerTax = getTxt("NBan > MST") || getTxt("MSTNBan");
             const number = getTxt("SHDon") || getTxt("SOHDON");
             if (!sellerTax || !number) return false;
 
             allInvoices.push({
-                date: getTxt("NLap") || getTxt("NGAY"),
-                series: getTxt("KHHDon") || getTxt("KH"),
+                date: getTxt("NLap") || getTxt("NGAY") || "---",
+                series: getTxt("KHHDon") || getTxt("KH") || "",
                 number: number,
                 sellerTax: sellerTax,
-                sellerName: getTxt("NBan > Ten") || getTxt("NBan > DVTen"),
-                totalAmount: getTxt("TgTTien"),
+                sellerName: getTxt("NBan > Ten") || getTxt("NBan > DVTen") || "Chưa rõ tên",
+                buyerName: getTxt("NMua > Ten") || getTxt("NMua > DVTen") || "Chưa rõ tên",
+                buyerTax: getTxt("NMua > MST") || "",
+                totalAmount: getTxt("TgTTien") || getTxt("TONGTIEN") || "0",
                 rawXml: xmlText
             });
             return true;
@@ -204,7 +261,7 @@
         tbody.innerHTML = "";
 
         if (!list.length) {
-            tbody.innerHTML = `<tr><td colspan="7" class="text-center" style="color:#999;">Không tìm thấy dữ liệu hóa đơn nào.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="7" class="text-center" style="color:#999; padding: 30px;">Không có dữ liệu hóa đơn nào.</td></tr>`;
             return;
         }
 
@@ -215,12 +272,12 @@
             tr.innerHTML = `
                 <td class="text-center">${i + 1}</td>
                 <td>${inv.date}</td>
-                <td><b>${inv.series} - ${inv.number}</b></td>
+                <td><b>${inv.series ? inv.series + '-' : ''}${inv.number}</b></td>
                 <td><b style="color:#1890ff;">${inv.sellerTax}</b></td>
                 <td>${inv.sellerName}</td>
-                <td class="text-right"><b>${fmt(inv.totalAmount)}</b></td>
+                <td class="text-right"><b style="color:#262626;">${fmt(inv.totalAmount)}</b></td>
                 <td class="text-center">
-                    <button class="btn-view" onclick='viewInvoice(${JSON.stringify(inv.rawXml)})'>🔍 Xem</button>
+                    <button class="btn-view" onclick='viewInvoice(${i})'>🔍 Xem</button>
                 </td>
             `;
             tbody.appendChild(tr);
@@ -237,47 +294,38 @@
         renderTable(filtered);
     }
 
-    function viewInvoice(rawXml) {
-        const xml = new DOMParser().parseFromString(rawXml, "text/xml");
-        const getTxt = (tag) => { const el = xml.querySelector(tag); return el ? el.textContent.trim() : ""; };
+    function viewInvoice(index) {
+        const inv = allInvoices[index];
         const fmt = (v) => v ? Number(v).toLocaleString("vi-VN") : "0";
 
-        document.getElementById("invSeries").innerText = getTxt("KHHDon") || getTxt("KH");
-        document.getElementById("invNumber").innerText = getTxt("SHDon") || getTxt("SOHDON");
-        document.getElementById("invDate").innerText = getTxt("NLap") || getTxt("NGAY");
-
-        document.getElementById("sellerName").innerText = getTxt("NBan > Ten") || getTxt("NBan > DVTen");
-        document.getElementById("sellerTax").innerText = getTxt("NBan > MST");
-        document.getElementById("sellerAddr").innerText = getTxt("NBan > DChi");
-
-        document.getElementById("buyerName").innerText = getTxt("NMua > Ten") || getTxt("NMua > DVTen");
-        document.getElementById("buyerTax").innerText = getTxt("NMua > MST");
-
-        const items = xml.querySelectorAll("HHDVu");
-        let html = "", stt = 1;
-        items.forEach(item => {
-            const name = item.querySelector("THDVuu")?.textContent || item.querySelector("TEN")?.textContent || "";
-            if (name) {
-                html += `<tr>
-                    <td class="text-center">${stt++}</td>
-                    <td>${name}</td>
-                    <td class="text-center">${item.querySelector("DVTinh")?.textContent || ""}</td>
-                    <td class="text-right">${fmt(item.querySelector("SLuong")?.textContent)}</td>
-                    <td class="text-right">${fmt(item.querySelector("DGia")?.textContent)}</td>
-                    <td class="text-right">${fmt(item.querySelector("ThTien")?.textContent)}</td>
-                </tr>`;
-            }
-        });
-
-        document.getElementById("itemsList").innerHTML = html;
-        document.getElementById("totalAmount").innerText = fmt(getTxt("TgTTien"));
+        document.getElementById("modalBody").innerHTML = `
+            <table class="invoice-detail-table">
+                <tr><td><b>Mẫu số/Ký hiệu:</b> ${inv.series}</td><td><b>Số Hóa Đơn:</b> <span style="color:red; font-weight:bold;">${inv.number}</span></td></tr>
+                <tr><td colspan="2"><b>Ngày lập:</b> ${inv.date}</td></tr>
+                <tr style="background:#f5f5f5;"><td colspan="2"><b>ĐƠN VỊ BÁN (NHÀ CUNG CẤP)</b></td></tr>
+                <tr><td colspan="2"><b>Tên đơn vị:</b> ${inv.sellerName}</td></tr>
+                <tr><td colspan="2"><b>Mã số thuế:</b> <b style="color:#1890ff;">${inv.sellerTax}</b></td></tr>
+                <tr style="background:#f5f5f5;"><td colspan="2"><b>ĐƠN VỊ MUA</b></td></tr>
+                <tr><td colspan="2"><b>Tên đơn vị:</b> ${inv.buyerName}</td></tr>
+                <tr><td colspan="2"><b>Mã số thuế:</b> ${inv.buyerTax}</td></tr>
+                <tr style="background:#fff1f0;"><td colspan="2" style="font-size:16px;"><b>Tổng tiền thanh toán:</b> <b style="color:#cf1322;">${fmt(inv.totalAmount)} VNĐ</b></td></tr>
+            </table>
+        `;
         document.getElementById("viewModal").style.display = "block";
     }
 
     function closeModal() { document.getElementById("viewModal").style.display = "none"; }
 
-    // Tự động kích hoạt đồng bộ khi mở trang web
-    window.onload = fetchFromOneDrive;
+    function setStatus(type, message) {
+        const el = document.getElementById("statusBox");
+        el.className = `status-box status-${type}`;
+        el.innerHTML = message;
+    }
+
+    // Tự động chạy ngay khi mở trang web
+    window.onload = function() {
+        syncFromOneDrive();
+    };
 </script>
 
 </body>
