@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hệ Thống Tra Cứu Hóa Đơn Tự Động - OneDrive</title>
+    <title>Hệ Thống Tra Cứu Hóa Đơn Tự Động - Galaxy Studio</title>
     <!-- Thư viện giải nén ZIP & đọc XML -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
         * { box-sizing: border-box; }
         body { 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; 
             background-color: #f4f6f9; 
             margin: 0; 
             padding: 20px; 
@@ -26,23 +26,15 @@
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #e8e8e8; padding-bottom: 15px; }
         h2 { margin: 0; color: #0050b3; font-size: 22px; }
         
-        .config-box { 
+        .info-box { 
             background: #e6f7ff; 
             border: 1px solid #91d5ff; 
-            padding: 15px; 
-            border-radius: 8px; 
-            margin-bottom: 20px; 
-        }
-        .input-group { display: flex; gap: 10px; margin-top: 8px; }
-        .input-group input { 
-            flex: 1; 
-            padding: 10px 14px; 
-            border: 1px solid #b7eb8f; 
+            padding: 12px 16px; 
             border-radius: 6px; 
-            font-size: 14px; 
-            background-color: #fff;
+            margin-bottom: 15px;
+            font-size: 14px;
         }
-        
+
         .btn { 
             background: #1890ff; 
             color: white; 
@@ -51,7 +43,6 @@
             border-radius: 6px; 
             cursor: pointer; 
             font-weight: 600; 
-            transition: all 0.2s;
         }
         .btn:hover { background: #40a9ff; }
         .btn-sync { background: #52c41a; }
@@ -68,13 +59,13 @@
         .status-success { background: #f6ffed; border: 1px solid #b7eb8f; color: #389e0d; }
         .status-error { background: #fff2f0; border: 1px solid #ffccc7; color: #cf1322; }
 
-        .search-box { margin-bottom: 20px; }
         .search-input { 
             width: 100%; 
             padding: 12px 16px; 
             border: 1px solid #d9d9d9; 
             border-radius: 6px; 
             font-size: 15px; 
+            margin-bottom: 20px;
             outline: none;
         }
         .search-input:focus { border-color: #40a9ff; box-shadow: 0 0 0 2px rgba(24,144,255,0.2); }
@@ -92,8 +83,6 @@
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.45); z-index: 1000; overflow-y: auto; }
         .modal-content { background: #fff; width: 90%; max-width: 750px; margin: 40px auto; padding: 25px; border-radius: 8px; position: relative; box-shadow: 0 4px 20px rgba(0,0,0,0.15); }
         .close-btn { position: absolute; top: 15px; right: 20px; font-size: 24px; cursor: pointer; color: #8c8c8c; }
-        .close-btn:hover { color: #262626; }
-        
         .invoice-detail-table { width: 100%; margin-top: 15px; }
         .invoice-detail-table td { padding: 8px; border: none; }
     </style>
@@ -103,28 +92,21 @@
 <div class="container">
     <div class="card">
         <div class="header">
-            <h2>☁️ Hệ Thống Tra Cứu Hóa Đơn OneDrive</h2>
-            <button class="btn btn-sync" onclick="syncFromOneDrive()">🔄 Cập Nhật Dữ Liệu</button>
+            <h2>📁 Tra Cứu Hóa Đơn - Thư Mục DATA (OneDrive)</h2>
+            <button class="btn btn-sync" onclick="syncFromOneDrive()">🔄 Tải Lại Dữ Liệu</button>
         </div>
         
-        <!-- Cấu hình Link OneDrive cố định -->
-        <div class="config-box">
-            <label><b>🔗 Link Thư Mục OneDrive Đang Kết Nối:</b></label>
-            <div class="input-group">
-                <input type="text" id="oneDriveLink" value="https://galaxystudiovn-my.sharepoint.com/:f:/g/personal/hungdt_galaxystudiovn_vn/IgCekKJeBBKZQI3UItxbOKSvAacUdRW4gj9IhY8IB1k8rUY?e=BWokD4">
-                <button class="btn" onclick="syncFromOneDrive()">Đồng Bộ Lại</button>
-            </div>
+        <div class="info-box">
+            📌 <b>Thư mục kết nối:</b> <code>WED HOA DON / DATA</code> (Tài khoản: <b>hungdt_galaxystudio_vn</b>)
         </div>
 
         <!-- Trạng thái kết nối -->
         <div id="statusBox" class="status-box status-loading">
-            ⏳ Đang kết nối tới OneDrive và tự động tải dữ liệu hóa đơn...
+            ⏳ Đang kết nối và tự động đồng bộ hóa đơn từ thư mục DATA...
         </div>
 
         <!-- Tìm kiếm -->
-        <div class="search-box">
-            <input type="text" id="searchInput" class="search-input" placeholder="🔍 Nhập Mã số thuế, Tên nhà cung cấp hoặc Số hóa đơn để tìm..." oninput="filterTable()">
-        </div>
+        <input type="text" id="searchInput" class="search-input" placeholder="🔍 Nhập Mã số thuế, Tên nhà cung cấp hoặc Số hóa đơn để tìm..." oninput="filterTable()">
 
         <!-- Bảng danh sách Hóa Đơn -->
         <table>
@@ -140,7 +122,7 @@
                 </tr>
             </thead>
             <tbody id="invoiceList">
-                <tr><td colspan="7" class="text-center" style="color:#999; padding: 30px;">Đang tải dữ liệu...</td></tr>
+                <tr><td colspan="7" class="text-center" style="color:#999; padding: 30px;">Đang quét dữ liệu...</td></tr>
             </tbody>
         </table>
     </div>
@@ -158,32 +140,23 @@
 <script>
     let allInvoices = [];
 
-    // Hàm đồng bộ tự động từ link OneDrive
+    // Link chia sẻ chuẩn dạng công khai cho folder DATA
+    const shareUrl = "https://galaxystudiovn-my.sharepoint.com/:f:/g/personal/hungdt_galaxystudio_vn/IgCekKJeBBKZQI3UItxbOKSvAacUdRW4gj9IhY8IB1k8rUY?e=BWokD4";
+
     async function syncFromOneDrive() {
-        const link = document.getElementById("oneDriveLink").value.trim();
-        const statusEl = document.getElementById("statusBox");
-
-        if (!link) {
-            alert("Vui lòng không để trống Link OneDrive!");
-            return;
-        }
-
-        setStatus("loading", "⏳ Đang kết nối tới OneDrive và quét danh sách hóa đơn...");
+        setStatus("loading", "⏳ Đang quét thư mục DATA trên SharePoint...");
 
         try {
-            // Sử dụng Proxy để đọc nội dung OneDrive vượt qua rào cản CORS
-            const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(link)}`;
-            
+            const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(shareUrl)}`;
             const response = await fetch(proxyUrl);
-            if (!response.ok) throw new Error("Không thể kết nối đến thư mục OneDrive.");
+            
+            if (!response.ok) throw new Error("Không thể truy cập thư mục.");
 
             const htmlText = await response.text();
-            
-            // Tìm tất cả các file XML/ZIP có trong thư mục OneDrive
-            const xmlUrls = extractFileUrls(htmlText, link);
+            const xmlUrls = extractFileUrls(htmlText);
 
             if (xmlUrls.length === 0) {
-                setStatus("error", "⚠️ Đã kết nối nhưng không quét thấy file XML/ZIP nào trong thư mục OneDrive này. LƯU Ý: Nếu đây là tài khoản doanh nghiệp nội bộ bảo mật cao, hãy kiểm tra quyền truy cập công khai.");
+                setStatus("error", "⚠️ Chưa tìm thấy file XML/ZIP nào trong thư mục DATA. Bạn hãy copy thêm hóa đơn vào thư mục trên máy tính nhé!");
                 renderTable([]);
                 return;
             }
@@ -192,46 +165,42 @@
             let count = 0;
 
             for (let i = 0; i < xmlUrls.length; i++) {
-                setStatus("loading", `⏳ Đang đọc nội dung hóa đơn (${i + 1}/${xmlUrls.length})...`);
-                const fileUrl = xmlUrls[i];
-                
+                setStatus("loading", `⏳ Đang nạp hóa đơn (${i + 1}/${xmlUrls.length})...`);
                 try {
-                    const fileRes = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(fileUrl)}`);
+                    const fileRes = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(xmlUrls[i])}`);
                     const xmlContent = await fileRes.text();
                     if (parseAndAddXml(xmlContent)) count++;
                 } catch(e) {}
             }
 
             if (count > 0) {
-                setStatus("success", `✅ Đã đồng bộ thành công ${count} hóa đơn từ OneDrive!`);
+                setStatus("success", `✅ Đã đồng bộ thành công ${count} hóa đơn từ thư mục DATA!`);
             } else {
-                setStatus("error", "❌ Đã tìm thấy file nhưng không phân tích được cấu trúc XML hóa đơn.");
+                setStatus("error", "❌ Không đọc được cấu trúc hóa đơn XML.");
             }
             
             renderTable(allInvoices);
 
         } catch (err) {
             console.error(err);
-            setStatus("error", "❌ Lỗi kết nối OneDrive: Hãy đảm bảo thư mục đã được bật quyền 'Anyone with the link' (Bất kỳ ai có liên kết).");
+            setStatus("error", "❌ Kết nối bị chặn bởi chính sách bảo mật doanh nghiệp (CORS/SharePoint Org Policy). Vui lòng đảm bảo folder đã chọn 'Anyone with link'.");
         }
     }
 
-    // Tách các liên kết file XML/ZIP từ HTML trả về
-    function extractFileUrls(htmlText, baseUrl) {
+    function extractFileUrls(htmlText) {
         const urls = [];
         const regex = /href=["']([^"']+\.(?:xml|zip)[^"']*)["']/gi;
         let match;
         while ((match = regex.exec(htmlText)) !== null) {
             let fileUrl = match[1];
             if (!fileUrl.startsWith("http")) {
-                fileUrl = new URL(fileUrl, baseUrl).href;
+                fileUrl = new URL(fileUrl, shareUrl).href;
             }
             urls.push(fileUrl);
         }
-        return [...new Set(urls)]; // Bỏ bớt đường dẫn trùng lặp
+        return [...new Set(urls)];
     }
 
-    // Đọc file XML hóa đơn
     function parseAndAddXml(xmlText) {
         try {
             const xml = new DOMParser().parseFromString(xmlText, "text/xml");
@@ -322,7 +291,6 @@
         el.innerHTML = message;
     }
 
-    // Tự động chạy ngay khi mở trang web
     window.onload = function() {
         syncFromOneDrive();
     };
